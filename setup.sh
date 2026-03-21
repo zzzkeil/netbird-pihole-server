@@ -248,7 +248,24 @@ sudo apt update
 sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 fi
 
-
 systemctl start docker
+
+### netbird
+apt install jq
+
+#server
+curl -fsSL https://github.com/netbirdio/netbird/releases/latest/download/getting-started.sh | bash
+
+#client - for exit node   # use the os repository
+sudo apt-get update
+sudo apt-get install ca-certificates curl gnupg -y
+curl -sSL https://pkgs.netbird.io/debian/public.key | sudo gpg --dearmor --output /usr/share/keyrings/netbird-archive-keyring.gpg
+echo 'deb [signed-by=/usr/share/keyrings/netbird-archive-keyring.gpg] https://pkgs.netbird.io/debian stable main' | sudo tee /etc/apt/sources.list.d/netbird.list
+sudo apt-get update
+sudo apt-get install netbird
+
+echo "   run with your values  when ready: netbird up --setup-key <SETUP KEY> --management-url https://your.domain:443 "
+
+
 
 
