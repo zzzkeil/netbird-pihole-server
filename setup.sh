@@ -193,7 +193,7 @@ while true; do
 done
 
 ### apt
-apt install sqlite3
+apt install sqlite3 -y
 
 echo " Add more list to block "
 sqlite3 /etc/pihole/gravity.db "INSERT INTO adlist (address, enabled, comment) VALUES ('https://raw.githubusercontent.com/hagezi/dns-blocklists/main/adblock/pro.txt', 1, 'MultiPRO-Extended')"
@@ -255,7 +255,7 @@ fi
 systemctl start docker
 
 ### netbird
-apt install jq
+apt install jq -y
 
 #server
 curl -fsSL https://github.com/netbirdio/netbird/releases/latest/download/getting-started.sh | bash
