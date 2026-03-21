@@ -119,6 +119,110 @@ echo 1 > /proc/sys/net/ipv4/ip_forward
 #echo "net.ipv6.conf.all.forwarding=1" >> /etc/sysctl.d/99-ipv6.conf.all.forwarding.conf
 #echo 1 > /proc/sys/net/ipv6/conf/all/forwarding
 
+# List of URLs to download
+urls=(
+    "https://raw.githubusercontent.com/zzzkeil/Wireguard_Pi-hole_DNScrypt_Nextcloud/refs/heads/master/tools/dnscrypt-proxy-pihole.toml"
+    "https://raw.githubusercontent.com/zzzkeil/Wireguard_Pi-hole_DNScrypt_Nextcloud/refs/heads/master/tools/dnscrypt-proxy-update.sh"
+    "https://raw.githubusercontent.com/zzzkeil/Wireguard_Pi-hole_DNScrypt_Nextcloud/refs/heads/master/tools/pihole.toml"
+    "https://raw.githubusercontent.com/zzzkeil/netbird-pihole-server/refs/heads/master/config/pihole.toml"
+    blob:https://github.com/6d458008-0e73-4e26-8c34-c3da28e36d68
+    config/pihole.toml
+)
+
+download_files() {
+    total_files=${#urls[@]}  
+    current_file=0  
+    for url in "${urls[@]}"; do
+        filename=$(basename "$url")
+        if [ -f "$filename" ]; then
+            echo "File $filename already exists. Overwriting..."
+        fi
+        curl -s -o "$filename" "$url" & 
+    done
+
+    wait
+}
+
+download_files
+
+mkdir /etc/dnscrypt-proxy/
+mv dnscrypt-proxy-pihole.toml /etc/dnscrypt-proxy/dnscrypt-proxy.toml
+mv dnscrypt-proxy-update.sh /etc/dnscrypt-proxy/dnscrypt-proxy-update.sh
+chmod +x /etc/dnscrypt-proxy/dnscrypt-proxy-update.sh
+
+mkdir /etc/pihole
+mv pihole.toml /etc/pihole/pihole.toml
+
+curl -L -o /etc/dnscrypt-proxy/dnscrypt-proxy.tar.gz "https://github.com/DNSCrypt/dnscrypt-proxy/releases/download/2.1.12/dnscrypt-proxy-linux_${dnsscrpt_arch}-2.1.15.tar.gz"
+if [ $? -eq 0 ]; then
+echo ""
+else
+    whiptail --title "Download Failed" --msgbox "Failed to download DNSCrypt Proxy. Please check your network connection." 15 80
+    exit 1
+fi
+
+tar -xvzf /etc/dnscrypt-proxy/dnscrypt-proxy.tar.gz -C /etc/dnscrypt-proxy/
+mv -f /etc/dnscrypt-proxy/linux-$dnsscrpt_arch/* /etc/dnscrypt-proxy/
+cp /etc/dnscrypt-proxy/example-blocked-names.txt /etc/dnscrypt-proxy/blocklist.txt
+
+/etc/dnscrypt-proxy/dnscrypt-proxy -service install
+/etc/dnscrypt-proxy/dnscrypt-proxy -service start
+
+whiptail --title "Downloading Pihole" --msgbox "Download source from https://install.pi-hole.net\nand runing pihole-install.sh --unattended  mode" 15 80
+curl -L -o pihole-install.sh https://install.pi-hole.net
+if [ $? -eq 0 ]; then
+echo ""
+else
+    whiptail --title "Download Failed" --msgbox "Failed to download Pihole. Please check your network connection." 15 80
+    exit 1
+fi
+chmod +x pihole-install.sh
+. pihole-install.sh --unattended 
+
+while true; do
+    whiptail --title "Pi-hole Password Setup" --infobox --nocancel "Please enter a password for your Pi-hole admin interface." 15 80
+    pihole_password=$(whiptail --title "Pi-hole Password" --inputbox --nocancel "Enter your Pi-hole admin password\nmin. 8 characters" 15 80 3>&1 1>&2 2>&3)
+    if [ $? -ne 0 ]; then
+       echo ""
+    fi
+    if [ ${#pihole_password} -ge 8 ]; then
+	    whiptail --title "Password Set" --msgbox "Password has been set successfully!" 15 60
+        pihole setpassword $pihole_password
+        break 
+    else
+        whiptail --title "Invalid Password" --msgbox "Password must be at least 8 characters long. Please try again." 15 60
+    fi
+done
+
+echo " Add more list to block "
+sqlite3 /etc/pihole/gravity.db "INSERT INTO adlist (address, enabled, comment) VALUES ('https://raw.githubusercontent.com/hagezi/dns-blocklists/main/adblock/pro.txt', 1, 'MultiPRO-Extended')"
+sqlite3 /etc/pihole/gravity.db "INSERT INTO adlist (address, enabled, comment) VALUES ('https://raw.githubusercontent.com/hagezi/dns-blocklists/main/adblock/tif.txt', 1, 'ThreatIntelligenceFeeds')"
+sqlite3 /etc/pihole/gravity.db "INSERT INTO adlist (address, enabled, comment) VALUES ('https://easylist.to/easylist/easylist.txt', 1, 'Easylist')"
+sqlite3 /etc/pihole/gravity.db "INSERT INTO adlist (address, enabled, comment) VALUES ('https://easylist.to/easylist/easyprivacy.txt', 1, 'Easyprivacy')"
+sqlite3 /etc/pihole/gravity.db "INSERT INTO adlist (address, enabled, comment) VALUES ('https://secure.fanboy.co.nz/fanboy-annoyance.txt', 1, 'fanboy-annoyance')"
+sqlite3 /etc/pihole/gravity.db "INSERT INTO adlist (address, enabled, comment) VALUES ('https://easylist.to/easylist/fanboy-social.txt', 1, 'fanboy-social')"
+sqlite3 /etc/pihole/gravity.db "INSERT INTO adlist (address, enabled, comment) VALUES ('https://secure.fanboy.co.nz/fanboy-cookiemonster.txt', 1, 'fanboy-cookiemonster')"
+pihole -g
+
+clear
+### create crontabs to update dnscrypt and pihole
+(crontab -l ; echo "59 23 * * 6 /etc/dnscrypt-proxy/dnscrypt-proxy-update.sh") | sort - | uniq - | crontab -
+(crontab -l ; echo "0 23 * * 3 pihole -up") | sort - | uniq - | crontab -
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 ##  docker 
