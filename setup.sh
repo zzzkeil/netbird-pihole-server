@@ -87,7 +87,7 @@ esac
 exit 1
 fi
 #########################################################
-# beginn testing .... without whiptail
+# beginn testing .... without whiptail for most parts
 #########################################################
 
 ## firewall  not the best idea with a docker setup, but lets try ......
@@ -121,12 +121,9 @@ echo 1 > /proc/sys/net/ipv4/ip_forward
 
 # List of URLs to download
 urls=(
-    "https://raw.githubusercontent.com/zzzkeil/Wireguard_Pi-hole_DNScrypt_Nextcloud/refs/heads/master/tools/dnscrypt-proxy-pihole.toml"
-    "https://raw.githubusercontent.com/zzzkeil/Wireguard_Pi-hole_DNScrypt_Nextcloud/refs/heads/master/tools/dnscrypt-proxy-update.sh"
-    "https://raw.githubusercontent.com/zzzkeil/Wireguard_Pi-hole_DNScrypt_Nextcloud/refs/heads/master/tools/pihole.toml"
-    "https://raw.githubusercontent.com/zzzkeil/netbird-pihole-server/refs/heads/master/config/pihole.toml"
-    blob:https://github.com/6d458008-0e73-4e26-8c34-c3da28e36d68
-    config/pihole.toml
+    "https://raw.githubusercontent.com/zzzkeil/netbird-pihole-server/refs/heads/main/config/dnscrypt-proxy-pihole.toml"
+    "https://raw.githubusercontent.com/zzzkeil/netbird-pihole-server/refs/heads/main/config/dnscrypt-proxy-update.sh"
+    "https://raw.githubusercontent.com/zzzkeil/netbird-pihole-server/refs/heads/main/config/pihole.toml"
 )
 
 download_files() {
@@ -181,16 +178,16 @@ chmod +x pihole-install.sh
 
 while true; do
     whiptail --title "Pi-hole Password Setup" --infobox --nocancel "Please enter a password for your Pi-hole admin interface." 15 80
-    pihole_password=$(whiptail --title "Pi-hole Password" --inputbox --nocancel "Enter your Pi-hole admin password\nmin. 8 characters" 15 80 3>&1 1>&2 2>&3)
+    pihole_password=$(whiptail --title "Pi-hole Password" --inputbox --nocancel "Enter your Pi-hole admin password\nmin. 16 characters" 15 80 3>&1 1>&2 2>&3)
     if [ $? -ne 0 ]; then
        echo ""
     fi
-    if [ ${#pihole_password} -ge 8 ]; then
+    if [ ${#pihole_password} -ge 16 ]; then
 	    whiptail --title "Password Set" --msgbox "Password has been set successfully!" 15 60
         pihole setpassword $pihole_password
         break 
     else
-        whiptail --title "Invalid Password" --msgbox "Password must be at least 8 characters long. Please try again." 15 60
+        whiptail --title "Invalid Password" --msgbox "Password must be at least 16 characters long. Please try again." 15 60
     fi
 done
 
@@ -208,19 +205,6 @@ clear
 ### create crontabs to update dnscrypt and pihole
 (crontab -l ; echo "59 23 * * 6 /etc/dnscrypt-proxy/dnscrypt-proxy-update.sh") | sort - | uniq - | crontab -
 (crontab -l ; echo "0 23 * * 3 pihole -up") | sort - | uniq - | crontab -
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
