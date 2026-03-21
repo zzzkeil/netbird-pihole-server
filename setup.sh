@@ -106,7 +106,8 @@ firewall-cmd --direct --add-rule ipv4 nat POSTROUTING 0 -s 100.64.0.0/10 ! -d 10
 #if [[ -n "$hostipv6" ]]; then
 #firewall-cmd --zone=trusted --add-source=
 #firewall-cmd --direct --add-rule ipv6 nat POSTROUTING 0 -s 0/64 ! -d 0/64 -j SNAT --to "$hostipv6"
-fi
+#fi
+
 
 # maybe wrong....
 firewall-cmd --zone=trusted --add-forward-port=port=53:proto=tcp:toport=53:toaddr=127.0.0.1
@@ -150,7 +151,7 @@ chmod +x /etc/dnscrypt-proxy/dnscrypt-proxy-update.sh
 mkdir /etc/pihole
 mv pihole.toml /etc/pihole/pihole.toml
 
-curl -L -o /etc/dnscrypt-proxy/dnscrypt-proxy.tar.gz "https://github.com/DNSCrypt/dnscrypt-proxy/releases/download/2.1.12/dnscrypt-proxy-linux_${dnsscrpt_arch}-2.1.15.tar.gz"
+curl -L -o /etc/dnscrypt-proxy/dnscrypt-proxy.tar.gz "https://github.com/DNSCrypt/dnscrypt-proxy/releases/download/2.1.15/dnscrypt-proxy-linux_${dnsscrpt_arch}-2.1.15.tar.gz"
 if [ $? -eq 0 ]; then
 echo ""
 else
