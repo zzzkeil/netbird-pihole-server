@@ -148,7 +148,7 @@
   #
   # Possible values are:
   #     a valid interface name
-  interface = "wg0" ### CHANGED, default = "eth0"
+  interface = "wt0" ### CHANGED, default = "eth0"
 
   # Add A, AAAA and PTR records to the DNS. This adds one or more names to the DNS with
   # associated IPv4 (A) and IPv6 (AAAA) records
