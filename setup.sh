@@ -222,15 +222,6 @@ sudo apt update
 sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 fi
 
-systemctl stop docker
-##docker firewalld ???
-
-echo '
-{
-  "iptables": false
-}
-' >> /etc/docker/daemon.json
-
 systemctl start docker
 
 
@@ -240,7 +231,6 @@ apt install jq -y
 #server
 curl -fsSL https://github.com/netbirdio/netbird/releases/latest/download/getting-started.sh | bash
 
-
 ## firewall  not the best idea with a docker setup, but lets try ......
 
 ### setup firewalld and sysctl  ipv6 and netbird not going well in 2026 ?
@@ -249,20 +239,32 @@ hostipv4=$(hostname -I | awk '{print $1}')
 
 # https://docs.netbird.io/help/troubleshooting-client#host-based-firewall-issues : firewalld Zone conflicts - NetBird interface may be in wrong zone
 firewall-cmd --zone=trusted --add-interface=wt0
-firewall-cmd --direct --add-rule ipv4 nat POSTROUTING 0 -s 100.64.0.0/10 ! -d 100.64.0.0/10 -j SNAT --to "$hostipv4"
+
+#NetBird docs usually expect MASQUERADE, not SNAT.
+#firewall-cmd --direct --add-rule ipv4 nat POSTROUTING 0 -s 100.64.0.0/10 ! -d 100.64.0.0/10 -j SNAT --to "$hostipv4"
+firewall-cmd --direct --add-rule ipv4 nat POSTROUTING 0 -s 100.64.0.0/10 -j MASQUERADE
 
 firewall-cmd --zone=public --add-port=80/tcp
 firewall-cmd --zone=public --add-port=443/tcp
 firewall-cmd --zone=public --add-port=3478/udp
+firewall-cmd --zone=public --add-port=51820/udp
+
+#Optional but recommended (TURN TCP fallback) - Some networks block UDP — open these too - These are used by coturn TLS/TCP fallback
+#firewall-cmd --zone=public --add-port=3478/tcp
+#firewall-cmd --zone=public --add-port=5349/tcp
 
 #if [[ -n "$hostipv6" ]]; then
 #firewall-cmd --direct --add-rule ipv6 nat POSTROUTING 0 -s 0/64 ! -d 0/64 -j SNAT --to "$hostipv6"
 #fi
 
-
 # maybe wrong....
-firewall-cmd --zone=trusted --add-forward-port=port=53:proto=tcp:toport=53:toaddr=127.0.0.1
-firewall-cmd --zone=trusted --add-forward-port=port=53:proto=udp:toport=53:toaddr=127.0.0.1
+#firewall-cmd --zone=trusted --add-forward-port=port=53:proto=tcp:toport=53:toaddr=127.0.0.1
+#firewall-cmd --zone=trusted --add-forward-port=port=53:proto=udp:toport=53:toaddr=127.0.0.1
+# maybe this .... only if needed,  normaly netbird is handle dns servers!?....
+#firewall-cmd --zone=trusted --add-port=53/udp
+#firewall-cmd --zone=trusted --add-port=53/tcp
+#firewall-cmd --direct --add-rule ipv4 nat PREROUTING 0 -i wt0 -p udp --dport 53 -j REDIRECT --to-port 53
+#firewall-cmd --direct --add-rule ipv4 nat PREROUTING 0 -i wt0 -p tcp --dport 53 -j REDIRECT --to-port 53
                              
 firewall-cmd --runtime-to-permanent
 firewall-cmd --reload
@@ -281,7 +283,7 @@ echo 'deb [signed-by=/usr/share/keyrings/netbird-archive-keyring.gpg] https://pk
 sudo apt-get update
 sudo apt-get install netbird
 
-echo "   run with your values  when ready: netbird up --setup-key <SETUP KEY> --management-url https://your.domain:443 "
+echo "---------- run with your values  when ready: netbird up --management-url https://your.domain:443 --setup-key <SETUP KEY>"
 
 
 
