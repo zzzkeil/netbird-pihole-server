@@ -184,7 +184,8 @@ clear
 
 
 ##  docker 
-apt remove $(dpkg --get-selections docker.io docker-compose docker-doc podman-docker containerd runc | cut -f1)
+#apt remove $(dpkg --get-selections docker.io docker-compose docker-doc podman-docker containerd runc | cut -f1) - AI said ❌ risky ?? :)
+apt remove docker.io docker-compose docker-doc podman-docker -y
 
 if [[ "$systemos" = 'debian' ]]; then
 sudo apt update
@@ -223,6 +224,7 @@ sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin dock
 fi
 
 systemctl start docker
+systemctl enable docker
 
 
 ### netbird
