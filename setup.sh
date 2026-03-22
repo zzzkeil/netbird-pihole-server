@@ -247,7 +247,7 @@ echo 'deb [signed-by=/usr/share/keyrings/netbird-archive-keyring.gpg] https://pk
 sudo apt-get update
 sudo apt-get install netbird
 
-echo "---------- run with your values  when ready: netbird up --management-url https://your.domain:443 --setup-key <SETUP KEY>"
+echo "---------- run with your values  when ready: netbird up --management-url https://...:443 --setup-key ..."
 
 
 
