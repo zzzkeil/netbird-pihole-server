@@ -224,6 +224,15 @@ fi
 
 systemctl start docker
 
+##docker firewalld ???
+
+echo '
+{
+  "iptables": false
+}
+' >> /etc/docker/daemon.json
+
+
 ### netbird
 apt install jq -y
 
