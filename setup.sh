@@ -222,8 +222,7 @@ sudo apt update
 sudo apt install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 fi
 
-systemctl start docker
-
+systemctl stop docker
 ##docker firewalld ???
 
 echo '
@@ -231,6 +230,8 @@ echo '
   "iptables": false
 }
 ' >> /etc/docker/daemon.json
+
+systemctl start docker
 
 
 ### netbird
